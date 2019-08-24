@@ -1,9 +1,9 @@
 package admin
 
 import (
-	"godiscourse/internal/durable"
-	"godiscourse/internal/models"
-	"godiscourse/internal/views"
+	"satellity/internal/durable"
+	"satellity/internal/models"
+	"satellity/internal/views"
 	"net/http"
 	"time"
 
@@ -26,7 +26,7 @@ func (impl *userImpl) index(w http.ResponseWriter, r *http.Request, _ map[string
 	users, err := models.ReadUsers(ctx, offset)
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
-		return
+	} else {
+		views.RenderUsers(w, r, users)
 	}
-	views.RenderUsers(w, r, users)
 }

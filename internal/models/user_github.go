@@ -6,10 +6,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"godiscourse/internal/configs"
-	"godiscourse/internal/durable"
-	"godiscourse/internal/external"
-	"godiscourse/internal/session"
+	"satellity/internal/configs"
+	"satellity/internal/durable"
+	"satellity/internal/external"
+	"satellity/internal/session"
 	"net/http"
 	"strings"
 	"time"
@@ -74,20 +74,21 @@ func CreateGithubUser(mctx *Context, code, sessionSecret string) (*User, error) 
 			return err
 		}
 		user.SessionID = s.SessionID
-		_, err = upsertStatistic(ctx, tx, "users")
 		return err
 	})
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
 	}
+	go upsertStatistic(mctx, "users")
 	return user, nil
 }
 
 func fetchAccessToken(ctx context.Context, code string) (string, error) {
+	config := configs.AppConfig
 	client := external.HTTPClient()
 	data, err := json.Marshal(map[string]interface{}{
-		"client_id":     configs.GithubClientID,
-		"client_secret": configs.GithubClientSecret,
+		"client_id":     config.Github.ClientID,
+		"client_secret": config.Github.ClientSecret,
 		"code":          code,
 	})
 	if err != nil {

@@ -2,31 +2,37 @@ package models
 
 import (
 	"context"
-	"godiscourse/internal/configs"
-	"godiscourse/internal/durable"
+	"satellity/internal/configs"
+	"satellity/internal/durable"
 	"log"
-
-	_ "github.com/lib/pq"
 )
 
 const (
 	testEnvironment = "test"
-	testDatabase    = "godiscourse_test"
+	testDatabase    = "satellity_test"
 )
 
 const (
-	dropUsersDDL      = `DROP TABLE IF EXISTS users;`
-	dropSessionsDDL   = `DROP TABLE IF EXISTS sessions;`
-	dropCategoriesDDL = `DROP TABLE IF EXISTS categories;`
-	dropTopicsDDL     = `DROP TABLE IF EXISTS topics;`
-	dropCommentsDDL   = `DROP TABLE IF EXISTS comments;`
-	dropStatisticsDDL = `DROP TABLE IF EXISTS statistics;`
+	dropUsersDDL        = `DROP TABLE IF EXISTS users;`
+	dropSessionsDDL     = `DROP TABLE IF EXISTS sessions;`
+	dropCategoriesDDL   = `DROP TABLE IF EXISTS categories;`
+	dropTopicUsersDDL   = `DROP TABLE IF EXISTS topic_users;`
+	dropTopicsDDL       = `DROP TABLE IF EXISTS topics;`
+	dropCommentsDDL     = `DROP TABLE IF EXISTS comments;`
+	dropGroupsDDL       = `DROP TABLE IF EXISTS groups`
+	dropParticipantsDDL = `DROP TABLE IF EXISTS participants`
+	dropMessagesDDL     = `DROP TABLE IF EXISTS messages`
+	dropStatisticsDDL   = `DROP TABLE IF EXISTS statistics;`
 )
 
 func teardownTestContext(mctx *Context) {
 	tables := []string{
 		dropStatisticsDDL,
+		dropMessagesDDL,
+		dropParticipantsDDL,
+		dropGroupsDDL,
 		dropCommentsDDL,
+		dropTopicUsersDDL,
 		dropTopicsDDL,
 		dropCategoriesDDL,
 		dropSessionsDDL,
@@ -41,23 +47,30 @@ func teardownTestContext(mctx *Context) {
 }
 
 func setupTestContext() *Context {
-	opts := configs.DefaultOptions()
-	if opts.Environment != testEnvironment {
-		log.Panicln(opts.Environment)
+	if err := configs.Init("./../configs", testEnvironment); err != nil {
+		log.Panicln(err)
+	}
+	config := configs.AppConfig
+	if config.Environment != testEnvironment || config.Database.Name != testDatabase {
+		log.Panicln(config.Environment, config.Database.Name)
 	}
 	db := durable.OpenDatabaseClient(context.Background(), &durable.ConnectionInfo{
-		User:     opts.DbUser,
-		Password: opts.DbPassword,
-		Host:     opts.DbHost,
-		Port:     opts.DbPort,
-		Name:     opts.DbName,
+		User:     config.Database.User,
+		Password: config.Database.Password,
+		Host:     config.Database.Host,
+		Port:     config.Database.Port,
+		Name:     config.Database.Name,
 	})
 	tables := []string{
 		usersDDL,
 		sessionsDDL,
 		categoriesDDL,
 		topicsDDL,
+		topicUsersDDL,
 		commentsDDL,
+		groupsDDL,
+		participantsDDL,
+		messagesDDL,
 		statisticsDDL,
 	}
 	for _, q := range tables {

@@ -1,7 +1,31 @@
 {
+  "site": {
+    "features": "Satellity is PRE-ALPHA now! Please be careful when you decide to use it!"
+  },
   "general": {
+    "all": "View all",
     "delete": "Delete",
+    "draft": "Save Draft",
     "submit": "Submit"
+  },
+  "community": {
+    "dashboard": "My Topics",
+    "name": "Community"
+  },
+  "group": {
+    "dashboard": "My Groups",
+    "edit": "Edit: %{name}",
+    "explore": "Explore Groups",
+    "lastest_discussions": "Lastest Discussions",
+    "members": "Members",
+    "name": "Groups",
+    "new": "Create a new group",
+    "join": "Join Group",
+    "exit": "Exit Group",
+    "navi": {
+      "members": "Members (%{count})",
+      "messages": "View Messages"
+    }
   },
   "topic": {
     "title": {
@@ -21,18 +45,20 @@
     }
   },
   "user": {
-    "edit": "Update Project",
+    "edit": "Update Profile",
     "nickname": "Nickname",
     "biography": "Biography",
     "topics": "Topics"
   },
   "home": {
-    "latest": "Latest"
+    "latest": "Latest",
+    "forum": "Forum is public, you can share your thoughts with the world.",
+    "group": "Group is private, share your thoughts with couple of devotee."
   },
   "login": {
     "github": "Sign in with GitHub"
   },
   "aside": {
-    "rules": "<li>1. Open Source on <a href='https://github.com/godiscourse/godiscourse' target='blank' class='soft'>Github</a>.</li><li> 2. Based on Golang, React and PostgreSQL. </li> <li> 3. Model tested. </li> <li> 4. Project <a href='https://github.com/godiscourse/godiscourse/projects/1' target='_blank'>Roadmap</a>. </li>"
+    "rules": "<li>1. Open Source on <a href='https://github.com/satellity/satellity' target='blank' class='soft'>Github</a>.</li><li> 2. Based on Golang, React and PostgreSQL. </li> <li> 3. Model tested. </li> <li> 4. Project <a href='https://github.com/satellity/satellity/projects/1' target='_blank'>Roadmap</a>. </li>"
   }
 }

@@ -1,6 +1,7 @@
 class Category {
   constructor(api) {
     this.api = api;
+    this.admin = new Admin(api);
   }
 
   index() {
@@ -11,6 +12,27 @@ class Category {
       window.localStorage.setItem('categories', btoa(JSON.stringify(categories)));
       return resp.data;
     });
+  }
+
+  topics(id, offset) {
+    if (!!offset) {
+      offset = offset.replace('+', '%2B')
+    }
+    return this.api.axios.get(`/categories/${id}/topics?offset=${offset}`).then((resp) => {
+      return resp.data;
+    });
+  }
+}
+
+class Admin {
+  constructor(api) {
+    this.api = api;
+  }
+
+  index() {
+    return this.api.axios.get('/admin/categories').then((resp) => {
+      return resp.data;
+    })
   }
 
   create(params) {
@@ -37,21 +59,6 @@ class Category {
     return this.api.axios.get(`/admin/categories/${id}`).then((resp) => {
       return resp.data;
     });
-  }
-
-  topics(id, offset) {
-    if (!!offset) {
-      offset = offset.replace('+', '%2B')
-    }
-    return this.api.axios.get(`/categories/${id}/topics?offset=${offset}`).then((resp) => {
-      return resp.data;
-    });
-  }
-
-  adminIndex() {
-    return this.api.axios.get('/admin/categories').then((resp) => {
-      return resp.data;
-    })
   }
 }
 

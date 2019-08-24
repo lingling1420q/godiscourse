@@ -5,6 +5,7 @@ import Cookies from 'js-cookie';
 class User {
   constructor(api) {
     this.api = api;
+    this.admin = new Admin(api);
     this.fixed_schema_header = '3059301306072a8648ce3d020106082a8648ce3d030107034200';
   }
 
@@ -48,14 +49,14 @@ class User {
     });
   }
 
-  me() {
+  remote() {
     return this.api.axios.get('/me').then((resp) => {
       window.localStorage.setItem('user', btoa(JSON.stringify(resp.data)));
       return resp.data;
     })
   }
 
-  readMe() {
+  local() {
     const user = window.localStorage.getItem('user');
     if (!user) {
       return {};
@@ -64,12 +65,12 @@ class User {
   }
 
   loggedIn() {
-    const user = this.readMe();
+    const user = this.local();
     return user.user_id !== undefined || user.username !== undefined || user.nickname !== undefined;
   }
 
   isAdmin() {
-    return this.readMe().role === 'admin';
+    return this.local().role === 'admin';
   }
 
   topics(id) {
@@ -78,14 +79,20 @@ class User {
     })
   }
 
-  adminIndex() {
+  clear() {
+    window.localStorage.clear();
+  }
+}
+
+class Admin {
+  constructor(api) {
+    this.api = api;
+  }
+
+  index() {
     return this.api.axios.get('/admin/users').then((resp) => {
       return resp.data;
     })
-  }
-
-  clear() {
-    window.localStorage.clear();
   }
 }
 

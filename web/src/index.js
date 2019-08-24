@@ -14,11 +14,15 @@ import AdminRoute from './admin/admin.js';
 import NoMatch from './sink.js';
 import Oauth from './users/oauth.js';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faComment, faComments, faEdit, faEye, faTrashAlt } from '@fortawesome/free-regular-svg-icons';
-import { faEllipsisV, faPlus, faHome } from '@fortawesome/free-solid-svg-icons';
-library.add(faComment, faComments, faEdit,
-  faEye, faTrashAlt,
-  faEllipsisV, faPlus, faHome);
+import { faBookmark, faComment, faComments, faEdit, faEye, faTrashAlt, faHeart } from '@fortawesome/free-regular-svg-icons';
+import { faChalkboard, faEllipsisV, faHome, faPlus, faUsersCog } from '@fortawesome/free-solid-svg-icons';
+library.add(
+  faBookmark, faComment, faComments,
+  faEdit, faEye, faTrashAlt,
+  faHeart,
+  faChalkboard, faEllipsisV, faHome,
+  faPlus, faUsersCog
+);
 
 showdown.setOption('customizedHeaderId', true);
 showdown.setOption('simplifiedAutoLink', true);

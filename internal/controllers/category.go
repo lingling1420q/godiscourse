@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"godiscourse/internal/durable"
-	"godiscourse/internal/models"
-	"godiscourse/internal/session"
-	"godiscourse/internal/views"
+	"satellity/internal/durable"
+	"satellity/internal/models"
+	"satellity/internal/session"
+	"satellity/internal/views"
 	"net/http"
 	"time"
 
@@ -23,25 +23,24 @@ func registerCategory(database *durable.Database, router *httptreemux.TreeMux) {
 }
 
 func (impl *categoryImpl) index(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	ctx := models.WrapContext(r.Context(), impl.database)
-	categories, err := models.ReadAllCategories(ctx)
+	mctx := models.WrapContext(r.Context(), impl.database)
+	categories, err := models.ReadAllCategories(mctx)
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
-		return
+	} else {
+		views.RenderCategories(w, r, categories)
 	}
-
-	views.RenderCategories(w, r, categories)
 }
 
 func (impl *categoryImpl) topics(w http.ResponseWriter, r *http.Request, params map[string]string) {
 	offset, _ := time.Parse(time.RFC3339Nano, r.URL.Query().Get("offset"))
-	ctx := models.WrapContext(r.Context(), impl.database)
-	category, err := models.ReadCategory(ctx, params["id"])
+	mctx := models.WrapContext(r.Context(), impl.database)
+	category, err := models.ReadCategory(mctx, params["id"])
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else if category == nil {
 		views.RenderErrorResponse(w, r, session.NotFoundError(r.Context()))
-	} else if topics, err := category.ReadTopics(ctx, offset); err != nil {
+	} else if topics, err := category.ReadTopics(mctx, offset); err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {
 		views.RenderTopics(w, r, topics)

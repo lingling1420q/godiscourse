@@ -7,9 +7,9 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
-	"godiscourse/internal/configs"
-	"godiscourse/internal/durable"
-	"godiscourse/internal/session"
+	"satellity/internal/configs"
+	"satellity/internal/durable"
+	"satellity/internal/session"
 	"strings"
 	"time"
 
@@ -18,21 +18,28 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	UserRoleAdmin  = "admin"
+	UserRoleMember = "member"
+)
+
 const usersDDL = `
 CREATE TABLE IF NOT EXISTS users (
-	user_id               VARCHAR(36) PRIMARY KEY,
-	email                 VARCHAR(512),
-	username              VARCHAR(64) NOT NULL CHECK (username ~* '^[a-z0-9][a-z0-9_]{3,63}$'),
-	nickname              VARCHAR(64) NOT NULL DEFAULT '',
-	biography             VARCHAR(2048) NOT NULL DEFAULT '',
-	encrypted_password    VARCHAR(1024),
-	github_id             VARCHAR(1024) UNIQUE,
-	created_at            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-	updated_at            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+	user_id                VARCHAR(36) PRIMARY KEY,
+	email                  VARCHAR(512),
+	username               VARCHAR(64) NOT NULL CHECK (username ~* '^[a-z0-9][a-z0-9_]{3,63}$'),
+	nickname               VARCHAR(64) NOT NULL DEFAULT '',
+	biography              VARCHAR(2048) NOT NULL DEFAULT '',
+	encrypted_password     VARCHAR(1024),
+	github_id              VARCHAR(1024) UNIQUE,
+	groups_count           BIGINT NOT NULL DEFAULT 0,
+	created_at             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	updated_at             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
-CREATE UNIQUE INDEX ON users ((LOWER(email)));
-CREATE UNIQUE INDEX ON users ((LOWER(username)));
-CREATE INDEX ON users (created_at);
+
+CREATE UNIQUE INDEX IF NOT EXISTS users_emailx ON users ((LOWER(email)));
+CREATE UNIQUE INDEX IF NOT EXISTS users_usernamex ON users ((LOWER(username)));
+CREATE INDEX IF NOT EXISTS users_createdx ON users (created_at);
 `
 
 // User contains info of a register user
@@ -44,6 +51,7 @@ type User struct {
 	Biography         string
 	EncryptedPassword sql.NullString
 	GithubID          sql.NullString
+	GroupsCount       int64
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 
@@ -51,10 +59,16 @@ type User struct {
 	isNew     bool
 }
 
-var userColumns = []string{"user_id", "email", "username", "nickname", "biography", "encrypted_password", "github_id", "created_at", "updated_at"}
+var userColumns = []string{"user_id", "email", "username", "nickname", "biography", "encrypted_password", "github_id", "groups_count", "created_at", "updated_at"}
 
 func (u *User) values() []interface{} {
-	return []interface{}{u.UserID, u.Email, u.Username, u.Nickname, u.Biography, u.EncryptedPassword, u.GithubID, u.CreatedAt, u.UpdatedAt}
+	return []interface{}{u.UserID, u.Email, u.Username, u.Nickname, u.Biography, u.EncryptedPassword, u.GithubID, u.GroupsCount, u.CreatedAt, u.UpdatedAt}
+}
+
+func userFromRows(row durable.Row) (*User, error) {
+	var u User
+	err := row.Scan(&u.UserID, &u.Email, &u.Username, &u.Nickname, &u.Biography, &u.EncryptedPassword, &u.GithubID, &u.GroupsCount, &u.CreatedAt, &u.UpdatedAt)
+	return &u, err
 }
 
 // CreateUser create a new user
@@ -307,10 +321,10 @@ func ReadUserByUsernameOrEmail(mctx *Context, identity string) (*User, error) {
 
 // Role of an user, contains admin and member for now.
 func (u *User) Role() string {
-	if configs.Operators[u.Email.String] {
-		return "admin"
+	if configs.AppConfig.OperatorSet[u.Email.String] {
+		return UserRoleAdmin
 	}
-	return "member"
+	return UserRoleMember
 }
 
 // Name is nickname or username
@@ -322,7 +336,7 @@ func (u *User) Name() string {
 }
 
 func (u *User) isAdmin() bool {
-	return u.Role() == "admin"
+	return u.Role() == UserRoleAdmin
 }
 
 func findUserByID(ctx context.Context, tx *sql.Tx, id string) (*User, error) {
@@ -358,8 +372,6 @@ func validateAndEncryptPassword(ctx context.Context, password string) (string, e
 	return string(hashedPassword), nil
 }
 
-func userFromRows(row durable.Row) (*User, error) {
-	var u User
-	err := row.Scan(&u.UserID, &u.Email, &u.Username, &u.Nickname, &u.Biography, &u.EncryptedPassword, &u.GithubID, &u.CreatedAt, &u.UpdatedAt)
-	return &u, err
+func isPermit(userID string, user *User) bool {
+	return userID == user.UserID || user.isAdmin()
 }

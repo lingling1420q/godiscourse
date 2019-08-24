@@ -4,11 +4,11 @@ import React, { Component } from 'react';
 import { Route, Link, Switch, Redirect } from 'react-router-dom';
 import Config from '../components/config.js';
 import API from '../api/index.js'
-import Home from '../home/index.js';
-import UserEdit from '../users/edit.js';
-import UserShow from '../users/show.js';
-import TopicNew from '../topics/new.js';
-import TopicShow from '../topics/show.js';
+import Home from '../home/view.js';
+import User from '../users/view.js';
+import Topic from '../topics/view.js';
+import Group from '../groups/view.js';
+import Message from '../messages/view.js';
 
 class MainLayout extends Component {
   constructor(props) {
@@ -25,12 +25,21 @@ class MainLayout extends Component {
         <Header />
         <div className='wrapper'>
           <Switch>
-            <Route exact path='/' component={Home} />
-            <Route exact path='/user/edit' component={UserEdit} />
-            <Route path='/users/:id' component={UserShow} />
-            <Route exact path='/topics/new' component={TopicNew} />
-            <Route path='/topics/:id/edit' component={TopicNew} />
-            <Route path='/topics/:id' component={TopicShow} />
+            <Route exact path='/' component={Home.Index} />
+            <Route exact path='/dashboard' component={Home.Dashboard} />
+            <Route exact path='/user/edit' component={User.Edit} />
+            <Route exact path='/user/groups' component={Group.List} />
+            <Route path='/users/:id' component={User.Show} />
+            <Route exact path='/community' component={Topic.Index} />
+            <Route exact path='/topics/new' component={Topic.New} />
+            <Route path='/topics/:id/edit' component={Topic.New} />
+            <Route path='/topics/:id' component={Topic.Show} />
+            <Route exact path='/groups' component={Group.Explore} />
+            <Route exact path='/groups/new' component={Group.New} />
+            <Route exact path='/groups/:id/edit' component={Group.New} />
+            <Route exact path='/groups/:id/members' component={Group.Members} />
+            <Route exact path='/groups/:id' component={Group.Show} />
+            <Route exact path='/groups/:id/messages' component={Message.Index} />
             <Redirect to={`/404?p=${this.state.p}`} />
           </Switch>
         </div>
@@ -39,26 +48,57 @@ class MainLayout extends Component {
   }
 }
 
-const Header = () => {
-  const user = new API().user;
-  let profile;
-  if (user.loggedIn()) {
-    profile = (
-      <Link to='/user/edit' className={`${style.navi} ${style.user}`}> {user.readMe().nickname} </Link>
-    );
+class Header extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {logging: false};
+
+    this.handleLoginClick = this.handleLoginClick.bind(this);
   }
-  return (
-    <header className={style.header}>
-      <Link to='/' className={style.brand}>
-        <FontAwesomeIcon icon={['fa', 'home']} />
-      </Link>
-      <div className={style.site}><span className={style.name}>{Config.Name}</span></div>
-      <Link to='/topics/new' className={style.navi}>
-        <FontAwesomeIcon icon={['fa', 'plus']} />
-      </Link>
-      {profile}
-    </header>
-  )
+
+  handleLoginClick(e) {
+    this.setState({logging: !this.state.logging});
+  }
+
+  render() {
+    const user = new API().user;
+    let profile = <a className={style.navi} onClick={this.handleLoginClick}>Login</a>;
+    if (user.loggedIn()) {
+      profile = (
+        <Link to='/user/edit' className={`${style.navi} ${style.user}`}> {user.local().nickname} </Link>
+      );
+    }
+    let modal;
+    if (!user.loggedIn()) {
+      modal = (
+        <div className={style.modal}>
+          <div className={style.modalContainer}>
+            <div onClick={this.handleLoginClick} className={style.action}>✕</div>
+            <div className={style.app}>Login Satellity</div>
+            <div className={style.content}>
+              <a href={`https://github.com/login/oauth/authorize?scope=user:email&client_id=${Config.GithubClientId}`}>{i18n.t('login.github')}</a>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    return (
+      <header className={style.header}>
+        <Link to='/' className={style.brand}>
+          <FontAwesomeIcon icon={['fa', 'home']} />
+        </Link>
+        <div className={style.site}><span className={style.name}>{Config.Name}</span></div>
+        <Link to='/groups' className={style.navi}>
+            {i18n.t('group.name')}
+        </Link>
+        <Link to='/community' className={style.navi}>
+            {i18n.t('community.name')}
+        </Link>
+        {profile}
+        {this.state.logging && modal}
+      </header>
+    )
+  }
 }
 
 export default MainLayout;
